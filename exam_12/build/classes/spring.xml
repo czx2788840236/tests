@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+        
+        <!-- mvc对注解的支持 -->
+		<mvc:annotation-driven/>
+		<!-- 扫描包结构 -->
+		<context:component-scan base-package="com.baidu.controller,com.baidu.service"></context:component-scan>
+		<!--  指定资源文件的位置及其名称，从该文件中获取数据库的基本连接信息-->
+		<!-- 视图解析器 -->
+		<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+				<property name="prefix" value="/WEB-INF/jsp/"></property>
+				<property name="suffix" value=".jsp"></property>
+		</bean>
+		<!-- 静态资源处理器 -->
+		<mvc:default-servlet-handler/> 
+		<context:property-placeholder location="classpath:db.properties"/>
+		<!-- 配置数据源的连接信息 
+			spring配置文件中 destroy-method="close"的作用：
+			该语句的原意为将BasicDataSource这个类中的destroy方法设置为关闭，即不销毁；
+			当数据库连接不使用的时候,就把该连接重新放到数据池中,方便下次使用调用.
+		-->
+		<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${jdbc.driver}"></property>
+			<property name="url" value="${jdbc.url}"></property>
+			<property name="username" value="${jdbc.username}"></property>
+			<property name="password" value="${jdbc.password}"></property>
+		</bean>		
+		<!-- 让spring管理sqlsessionfactory 使用mybatis和spring整合包中的
+			创建SqlSessionFactory，同时指定数据源 -->  
+	    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+	        <!-- 数据库连接池 -->  
+	        <property name="dataSource" ref="dataSource" />
+	        <!-- mybatis配置文件引入 
+	        <property name="configLocation" value="classpath:mybatis-config.xml"></property>-->
+			<!-- pageHelper插件配置 -->
+	        <property name="plugins">
+			    <array>
+			      <bean class="com.github.pagehelper.PageInterceptor">
+			        <property name="properties">
+			          <!-- config params as the following -->
+			          <value>
+			            param1=value1
+			          </value>
+			        </property>
+			      </bean>
+			    </array>
+		  	</property>
+	    </bean>  
+	    
+	    
+	    <!-- 扫描mapper包 -->
+	    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">  
+	    	<!-- 指定mapper自动扫描的包,注意如果使用的是mapper扫描器，那么dao层完全是依赖于接口开发，不需要具体的实现类 -->
+	        <property name="basePackage" value="com.baidu.mapper" /> 
+	    </bean>  
+	    
+	    
+	    <!-- 配置事务管理器  -->
+		<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+			<property name="dataSource" ref="dataSource"></property>
+		</bean>
+		
+		<!-- 事务处理  -->
+		<aop:config>
+			<!-- 声明切入点，也就是声明service层的路径，因为事务基本都是加在service层 -->
+			<aop:pointcut expression="execution(* com.baidu.service..*.*(..))" id="txPointcut"/>
+			<!-- 通知与切入点关联 -->
+			<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>
+		</aop:config>
+		<tx:advice id="txAdvice" transaction-manager="transactionManager">  
+	        <tx:attributes> 
+	            <!-- 传播行为 -->  
+	            <tx:method name="save*" propagation="REQUIRED" />  
+	            <tx:method name="insert*" propagation="REQUIRED" />  
+	            <tx:method name="add*" propagation="REQUIRED" />  
+	            <tx:method name="create*" propagation="REQUIRED" />  
+	            <tx:method name="delete*" propagation="REQUIRED" />  
+	            <tx:method name="update*" propagation="REQUIRED" />  
+	            <!-- read-only="true"表示只能查询，不能修改，否则报错  -->
+	            <tx:method name="find*" propagation="SUPPORTS" read-only="true" />  
+	            <tx:method name="select*" propagation="SUPPORTS" read-only="true" />  
+	            <tx:method name="get*" propagation="SUPPORTS" read-only="true" />  
+	            <tx:method name="query*" propagation="SUPPORTS" read-only="true" />  
+	        </tx:attributes>  
+    	</tx:advice>  
+</beans>

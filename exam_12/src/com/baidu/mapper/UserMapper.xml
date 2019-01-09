@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.baidu.mapper.UserMapper">
+  		<resultMap type="com.baidu.bean.User" id="orderMap">
+  			<id property="userId"  column="user_id"  />
+  			<result  property="userName"  column="user_name"  />
+  			<result  property="userPwd"  column="user_pwd"  />
+  			<result  property="userMoney"  column="user_money"  />
+  			
+  			<collection property="goodss" ofType="com.baidu.bean.Goods" >
+  				<id property="goodsId"  column="goods_id"  />
+  				<result  property="goodsCode"  column="goods_code"  />
+  				<result  property="goodsName"  column="goods_name"  />
+  				<result  property="goodsLogoCn"  column="goods_logo_cn"  />
+  				<result  property="goodsLogoEn"  column="goods_logo_en"  />
+  				<result  property="goodsPrice"  column="goods_price"  />
+  				<result  property="goodsSales"  column="goods_sales"  />
+  				<result  property="goodsStock"  column="goods_stock"  />
+  				<result  property="goodsNum"  column="goods_num"  />
+  			</collection>
+  			
+  		</resultMap>
+  		
+  		<!--  登录 验证 -->
+  		<select id="queryUserByNameAndPwd"  parameterType="com.baidu.bean.User"  resultMap="orderMap"  >
+  			select * from t_user_0717  where  user_name = #{userName}  and user_pwd = #{userPwd}
+  		</select>
+  		
+  			<!--  根据id 查询 用户信息  -->
+  		<select id="queryUserByUserId" parameterType="int"  resultMap="orderMap" >
+  		select * from t_user_0717 u 
+		left join t_zhong_0717  z on  u.user_id = z.user_id
+		left join t_goods_0717 g on z.goods_id = g.goods_id 
+		where u.user_id = #{id}
+  		</select>
+  		
+  		<!-- 中间表 计数 -1  -->
+  		<update id="updateZhongJian" parameterType="com.baidu.bean.Zhong" >
+  			update t_zhong_0717 set goods_num = #{goodsNum} - 1 where goods_id = #{goodsId} and user_id = #{userId}
+  		</update>
+  		
+  		<!-- 中间表 计数 +1  -->
+  		<update id="updateZhongJia" parameterType="com.baidu.bean.Zhong" >
+  			update t_zhong_0717 set goods_num = #{goodsNum} + 1 where goods_id = #{goodsId} and user_id = #{userId}
+  		</update>
+  		
+  		<!-- 添加用户  -->
+  		<insert id="insertUser" parameterType="com.baidu.bean.User" >
+  			insert into t_user_0717 (user_name,user_pwd,user_money) values
+  			 (#{userName},#{userPwd},#{userMoney})
+  		</insert>
+  		
+  		<!--  根据 两个id 删除 -->
+  		<delete id="deleteGoods" parameterType="com.baidu.bean.Zhong" >
+  			delete from t_zhong_0717 where goods_id = #{goodsId} and user_id = #{userId}
+  		</delete>
+  		
+  		
+  </mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.baidu.mapper.GoodsMapper">
+  		
+  		<resultMap type="com.baidu.bean.Goods" id="orderMap">
+  			<id property="goodsId"  column="goods_id"  />
+  			<result  property="goodsCode"  column="goods_code"  />
+  			<result  property="goodsName"  column="goods_name"  />
+  			<result  property="goodsLogoCn"  column="goods_logo_cn"  />
+  			<result  property="goodsLogoEn"  column="goods_logo_en"  />
+  			<result  property="goodsPrice"  column="goods_price"  />
+  			<result  property="goodsSales"  column="goods_sales"  />
+  			<result  property="goodsStock"  column="goods_stock"  />
+  		</resultMap>
+  		
+  		<!-- 查询 所有可以 模糊查询   -->
+  		<select id="queryAllGoods"  parameterType="com.baidu.bean.Goods"  resultMap="orderMap"  >
+  			select * from t_goods_0717  
+  			<where>
+  				<if test="goodsName != null and goodsName != ''">
+  					or  goods_name like '%${goodsName}%'
+  				</if>
+  				
+  				<if test="goodsName != null and goodsName != ''">
+  					or  goods_logo_cn like '%${goodsName}%'
+  				</if>
+  				
+  				<if test="goodsName != null and goodsName != ''">
+  					or  goods_logo_en like '%${goodsName}%'
+  				</if>
+  			</where>
+  		</select>
+  		
+  		<!--  添加中间表数据  -->
+  		<insert id="insertZhong" parameterType="com.baidu.bean.Zhong" >
+  			insert into t_zhong_0717 (user_id,goods_id,goods_num) values 
+  			(#{userId},#{goodsId},1)
+  		</insert>
+  		
+  		<!--  删除中间表数据 根据 用户id 和  商品ID  -->
+  		<delete id="deleteZhong"  parameterType="com.baidu.bean.Zhong" >
+  			delete from t_zhong_0717 where user_id = #{userId} and goodsId = #{goodsId}
+  		</delete>
+  		
+  		
+  		
+  	
+  		
+  		
+  </mapper>
